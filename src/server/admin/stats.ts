@@ -81,7 +81,7 @@ export async function practiceKpis(r: Range) {
   }
   const completed = s.completed ?? 0;
   return {
-    bookings: { created, real, ...s },
+    bookings: { created, real, completed: s.completed ?? 0, cancelled: s.cancelled ?? 0, noShow: s.no_show ?? 0 },
     rates: {
       cancellation: real ? (s.cancelled ?? 0) / real : 0,
       noShow: completed + (s.no_show ?? 0) ? (s.no_show ?? 0) / (completed + (s.no_show ?? 0)) : 0,

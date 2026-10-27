@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         term: utm.utm_term ?? null,
         clickPlatform: clickPlatform ?? null,
         landingPath: path,
+        experimentVariant: path.includes("/lp/") ? (jar.get("dr_exp")?.value ?? null) : null,
       })
       .returning({ id: attributions.id });
     attributionId = a.id;

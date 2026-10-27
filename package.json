@@ -10,10 +10,10 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsx scripts/migrate.ts",
-    "db:dev": "tsx scripts/dev-db.ts",
-    "db:seed": "tsx scripts/seed.ts",
-    "worker": "tsx scripts/worker.ts"
+    "db:migrate": "tsx scripts/migrate.mts",
+    "db:dev": "tsx scripts/dev-db.mts",
+    "db:seed": "tsx scripts/seed.mts",
+    "worker": "tsx scripts/worker.mts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.12",

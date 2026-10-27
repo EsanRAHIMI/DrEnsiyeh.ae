@@ -9,6 +9,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { MobileBookingBar } from "@/components/MobileBookingBar";
 import { ConsentManager } from "@/components/ConsentManager";
 import { DemoBanner } from "@/components/DemoBanner";
+import { WebVitals } from "@/components/WebVitals";
 import { baseUrl } from "@/lib/site";
 
 const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", display: "swap", axes: ["opsz"] });
@@ -44,6 +45,7 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[lo
         <SiteFooter locale={locale} t={t} />
         <MobileBookingBar locale={locale} t={t} />
         <ConsentManager locale={locale} />
+        <WebVitals />
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+import "./env.mts";
 /**
  * Local development Postgres without Docker: PGlite (Postgres compiled to WASM) behind a
  * wire-protocol socket so the app talks to it with the normal `pg` driver.

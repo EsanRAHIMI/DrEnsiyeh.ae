@@ -12,14 +12,14 @@ import { decrypt, encrypt, safeEqual } from "@/lib/crypto";
 const root = () => process.env.STORAGE_DIR ?? ".data/uploads";
 
 export async function putObject(key: string, data: Buffer) {
-  const file = path.join(root(), key.replace(/[^a-zA-Z0-9/_-]/g, ""));
+  const file = path.join(/*turbopackIgnore: true*/ root(), key.replace(/[^a-zA-Z0-9/_-]/g, ""));
   await mkdir(path.dirname(file), { recursive: true });
   await writeFile(file, encrypt(data.toString("base64")));
   return { sha256: createHash("sha256").update(data).digest("hex"), sizeBytes: data.length };
 }
 
 export async function getObject(key: string): Promise<Buffer> {
-  const file = path.join(root(), key.replace(/[^a-zA-Z0-9/_-]/g, ""));
+  const file = path.join(/*turbopackIgnore: true*/ root(), key.replace(/[^a-zA-Z0-9/_-]/g, ""));
   return Buffer.from(decrypt(await readFile(file, "utf8")), "base64");
 }
 

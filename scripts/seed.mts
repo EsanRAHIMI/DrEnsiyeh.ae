@@ -1,3 +1,4 @@
+import "./env.mts";
 /**
  * Seeds a development/staging database.
  *
@@ -8,8 +9,8 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import { Pool } from "pg";
-import * as schema from "../src/db/schema";
-import { DEFAULT_COMPLIANCE } from "../src/server/compliance";
+import * as schema from "../src/db/schema.ts";
+import { DEFAULT_COMPLIANCE } from "../src/lib/compliance-model.ts";
 import { randomUUID } from "node:crypto";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
