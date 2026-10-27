@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { dismissConsent, signIn } from "./helpers";
-import { totp } from "../src/lib/crypto";
+import { dismissConsent, signIn, signInDoctor } from "./helpers";
 
 const patientEmail = `patient.${Date.now()}@example.test`;
 let reference = "";
+
+test.skip(!!process.env.STRIPE_SECRET_KEY, "Request-only flow runs when online payments are disabled");
 
 test.describe.serial("Scenario A + D: clinic booking → patient portal → doctor confirmation", () => {
   test("new patient books a clinic consultation without an account", async ({ page }) => {
@@ -36,16 +37,7 @@ test.describe.serial("Scenario A + D: clinic booking → patient portal → doct
   });
 
   test("doctor signs in, enrols MFA, and confirms the appointment", async ({ page }) => {
-    await signIn(page, process.env.SEED_DOCTOR_EMAIL ?? "doctor@drensiyeh.test");
-    await page.waitForURL(/\/admin/);
-    if (page.url().includes("/admin/mfa/setup")) {
-      const secret = (await page.locator("p.font-mono").textContent())!.replace(/\s/g, "");
-      await page.getByLabel("Authentication code").fill(totp(secret));
-      await page.getByRole("button", { name: "Activate" }).click();
-    } else if (page.url().includes("/admin/mfa")) {
-      test.skip(true, "Doctor already enrolled with an unknown secret — reset the dev DB to rerun");
-    }
-    await page.waitForURL(/\/admin$/);
+    await signInDoctor(page);
     await page.goto("/admin/appointments?status=requested");
     await page.getByRole("row").filter({ hasText: reference }).getByRole("link", { name: "Open" }).click();
     await page.getByRole("button", { name: "Confirm appointment" }).click();

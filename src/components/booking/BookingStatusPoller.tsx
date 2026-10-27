@@ -19,7 +19,8 @@ export function BookingStatusPoller({ locale, bookingId, token, cancelled }: { l
     let stop = false;
     async function tick(n: number) {
       try {
-        const res = await fetch(`/api/v1/bookings/${bookingId}?t=${encodeURIComponent(token)}`, { cache: "no-store" });
+        const sid = new URLSearchParams(window.location.search).get("session_id");
+        const res = await fetch(`/api/v1/bookings/${bookingId}?t=${encodeURIComponent(token)}${sid ? `&session_id=${encodeURIComponent(sid)}` : ""}`, { cache: "no-store" });
         if (!res.ok) throw new Error();
         const body: S = await res.json();
         if (stop) return;

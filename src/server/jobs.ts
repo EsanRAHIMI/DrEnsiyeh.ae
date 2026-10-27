@@ -37,6 +37,24 @@ export async function runJob(job: Job, deps: Deps) {
 }
 
 /**
+ * Reads a Checkout Session from Stripe (server-to-server — the source of truth) and applies it
+ * through the same idempotent handlers the webhook uses. Returns true if state changed.
+ */
+export async function syncCheckoutSession(deps: Deps, sessionId: string): Promise<boolean> {
+  const s = await stripe().checkout.sessions.retrieve(sessionId, { expand: ["payment_intent"] });
+  const pi = typeof s.payment_intent === "object" ? s.payment_intent : null;
+  if (s.status === "expired") {
+    await onCheckoutExpired(deps, s.id);
+    return true;
+  }
+  if (s.status === "complete" && pi && (pi.status === "succeeded" || pi.status === "requires_capture")) {
+    const r = await onCheckoutPaid(deps, { checkoutSessionId: s.id, paymentIntentId: pi.id, amountMinor: pi.amount, currency: pi.currency, captured: pi.status === "succeeded", livemode: s.livemode });
+    return r.action !== "noop";
+  }
+  return false;
+}
+
+/**
  * Payment reconciliation: catches webhooks that never arrived. For each checkout open longer than
  * 40 minutes, ask Stripe for the truth and apply it through the same idempotent handlers.
  * Also fills processing fees from balance transactions for reporting.
@@ -46,16 +64,7 @@ async function reconcilePayments(deps: Deps) {
   const stale = await deps.db.select().from(payments).where(and(eq(payments.status, "open"), lt(payments.createdAt, new Date(Date.now() - 40 * 60_000)))).limit(50);
   let fixed = 0;
   for (const p of stale) {
-    if (!p.checkoutSessionId) continue;
-    const s = await stripe().checkout.sessions.retrieve(p.checkoutSessionId, { expand: ["payment_intent"] });
-    const pi = typeof s.payment_intent === "object" ? s.payment_intent : null;
-    if (s.status === "expired") {
-      await onCheckoutExpired(deps, s.id);
-      fixed++;
-    } else if (s.status === "complete" && pi && (pi.status === "succeeded" || pi.status === "requires_capture")) {
-      await onCheckoutPaid(deps, { checkoutSessionId: s.id, paymentIntentId: pi.id, amountMinor: pi.amount, currency: pi.currency, captured: pi.status === "succeeded", livemode: s.livemode });
-      fixed++;
-    }
+    if (p.checkoutSessionId && (await syncCheckoutSession(deps, p.checkoutSessionId))) fixed++;
   }
   const noFee = await deps.db.select().from(payments).where(and(eq(payments.status, "succeeded"), isNull(payments.feeMinor))).limit(50);
   for (const p of noFee) {
