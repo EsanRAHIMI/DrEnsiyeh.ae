@@ -162,6 +162,8 @@ export const facilities = pgTable("facilities", {
   paymentMode: text("payment_mode", { enum: ["prepay", "pay_at_facility"] }).notNull().default("pay_at_facility"),
   captureMode: text("capture_mode", { enum: ["automatic", "on_confirmation"] }).notNull().default("on_confirmation"),
   insuranceNote: text("insurance_note"),
+  // Contractual physician share of consultation fees at this facility (null = not configured).
+  physicianSharePercent: integer("physician_share_percent"),
   cancellationPolicy: jsonb("cancellation_policy").notNull().default({ freeCancelHours: 24, lateCancelRefundPercent: 0 }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),

@@ -1,0 +1,1 @@
+ALTER TABLE "facilities" ADD COLUMN "physician_share_percent" integer;

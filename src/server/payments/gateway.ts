@@ -44,8 +44,9 @@ export const stripeGateway = (): PaymentGateway => ({
         mode: "payment",
         client_reference_id: req.bookingId,
         customer_email: req.customerEmail ?? undefined,
-        // Card covers Visa/Mastercard; Apple Pay & Google Pay are surfaced automatically by Checkout for card.
-        payment_method_types: ["card"],
+        // Dynamic payment methods (Stripe Dashboard → Payment methods): cards (Visa, Mastercard),
+        // Apple Pay and Google Pay are offered automatically where the device supports them.
+        allowed_payment_method_types: ["card"],
         line_items: [
           {
             quantity: 1,
@@ -65,7 +66,6 @@ export const stripeGateway = (): PaymentGateway => ({
         expires_at: Math.floor(req.expiresAt.getTime() / 1000),
         success_url: req.successUrl,
         cancel_url: req.cancelUrl,
-        invoice_creation: undefined,
       },
       { idempotencyKey: req.idempotencyKey },
     );

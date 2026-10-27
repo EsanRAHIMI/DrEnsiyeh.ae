@@ -15,6 +15,13 @@
       "when": 1793120887589,
       "tag": "0001_booking_exclusion",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793122324956,
+      "tag": "0002_facility_revenue_share",
+      "breakpoints": true
     }
   ]
 }
