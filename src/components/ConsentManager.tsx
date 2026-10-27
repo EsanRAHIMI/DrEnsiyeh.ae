@@ -1,26 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
-import { readConsent, writeConsent, CONSENT_VERSION, type ConsentState } from "@/lib/consent-client";
+import { readConsent, writeConsent, CONSENT_VERSION, CONSENT_EVENT, type ConsentState } from "@/lib/consent-client";
 
 /**
  * Consent banner. Defaults: only strictly necessary storage. "Analytics" enables first-party,
  * aggregate funnel measurement. "Advertising" is shown only when ad pixels are enabled by
  * compliance settings, and is never applied on booking, portal or admin pages.
  */
+function subscribe(cb: () => void) {
+  window.addEventListener(CONSENT_EVENT, cb);
+  return () => window.removeEventListener(CONSENT_EVENT, cb);
+}
+const cookieSnapshot = () => document.cookie.match(/(?:^|; )dr_consent=([^;]+)/)?.[1] ?? "";
+const serverSnapshot = () => null;
+
 export function ConsentManager({ locale }: { locale: string }) {
-  const [state, setState] = useState<ConsentState | null | undefined>(undefined);
+  // The consent cookie is external state: read it with useSyncExternalStore (null during SSR).
+  const raw = useSyncExternalStore(subscribe, cookieSnapshot, serverSnapshot);
+  const [reopened, setReopened] = useState(false);
   const [customise, setCustomise] = useState(false);
   const [analytics, setAnalytics] = useState(false);
   const pathname = usePathname();
+  const state: ConsentState | null | undefined = raw === null ? undefined : reopened ? null : readConsent();
 
   useEffect(() => {
-    const c = readConsent();
-    setState(c);
     const open = () => {
-      setState(null);
+      setReopened(true);
       setCustomise(true);
     };
     window.addEventListener("dr:open-consent", open);
@@ -29,13 +37,13 @@ export function ConsentManager({ locale }: { locale: string }) {
 
   useEffect(() => {
     if (state?.analytics) captureAttribution(pathname);
-  }, [state, pathname]);
+  }, [state?.analytics, pathname]);
 
   if (state !== null) return null;
 
   const save = (c: Omit<ConsentState, "version" | "at">) => {
-    const full = writeConsent(c);
-    setState(full);
+    writeConsent(c);
+    setReopened(false);
   };
 
   return (

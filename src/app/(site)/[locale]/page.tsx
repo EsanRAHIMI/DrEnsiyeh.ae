@@ -150,8 +150,7 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
               ["Confirm", "Add your details and pay securely, or send a request where payment is at the facility."],
               ["Manage", "Your secure patient account is created automatically — sign in with a one-time code."],
             ].map(([title, body], i) => (
-              <li key={title} className="relative">
-                <span className="font-display text-5xl text-teal/25">{String(i + 1).padStart(2, "0")}</span>
+              <li key={title} data-step={String(i + 1).padStart(2, "0")} className="relative before:block before:font-display before:text-5xl before:text-teal/25 before:content-[attr(data-step)]">
                 <p className="mt-2 text-lg font-semibold text-ink">{title}</p>
                 <p className="mt-1.5 text-[15px] leading-relaxed text-ink-soft">{body}</p>
               </li>

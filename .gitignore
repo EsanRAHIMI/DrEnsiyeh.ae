@@ -42,3 +42,7 @@ next-env.d.ts
 .data/
 !.env.example
 .data-devdb.log
+test-results/
+playwright-report/
+reports/*.json
+.next-start.log

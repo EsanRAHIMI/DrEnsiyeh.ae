@@ -57,18 +57,22 @@ export async function requestLoginCode(database: Db, rawEmail: string, baseUrl: 
 }
 
 async function consumeChallenge(database: Db, where: ReturnType<typeof eq>, check: (c: typeof loginChallenges.$inferSelect) => boolean) {
-  return database.transaction(async (tx) => {
+  // The failed-attempt increment must commit even though the caller gets an error,
+  // so the transaction returns an outcome and we throw only after it has committed.
+  const outcome = await database.transaction(async (tx) => {
     const [c] = await tx.select().from(loginChallenges).where(and(where, isNull(loginChallenges.consumedAt))).for("update");
-    if (!c) throw new AuthError("invalid_code");
-    if (c.expiresAt < new Date()) throw new AuthError("expired");
-    if (c.attempts >= MAX_CODE_ATTEMPTS) throw new AuthError("rate_limited");
+    if (!c) return { error: "invalid_code" as const };
+    if (c.expiresAt < new Date()) return { error: "expired" as const };
+    if (c.attempts >= MAX_CODE_ATTEMPTS) return { error: "rate_limited" as const };
     if (!check(c)) {
       await tx.update(loginChallenges).set({ attempts: c.attempts + 1 }).where(eq(loginChallenges.id, c.id));
-      throw new AuthError("invalid_code");
+      return { error: "invalid_code" as const };
     }
     await tx.update(loginChallenges).set({ consumedAt: new Date() }).where(eq(loginChallenges.id, c.id));
-    return c;
+    return { challenge: c };
   });
+  if (!outcome.challenge) throw new AuthError(outcome.error ?? "invalid_code");
+  return outcome.challenge;
 }
 
 export async function verifyLoginCode(database: Db, challengeId: string, rawEmail: string, code: string) {

@@ -1,4 +1,4 @@
-import { and, avg, desc, eq, isNull, sql, sum } from "drizzle-orm";
+import { avg, desc, eq, isNull, sql, sum } from "drizzle-orm";
 import { db } from "@/db";
 import { editorialTasks, searchMetrics, seoIssues, webVitals } from "@/db/schema";
 import { requireStaff } from "@/server/auth/session";

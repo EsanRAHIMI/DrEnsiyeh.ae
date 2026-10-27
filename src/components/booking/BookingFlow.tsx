@@ -70,16 +70,18 @@ export function BookingFlow(props: {
     () => props.options.filter((o) => o.kind === kind && (!props.initialFacility || o.kind !== "clinic" || o.facilitySlug === props.initialFacility)),
     [props.options, kind, props.initialFacility],
   );
-  const [offeringId, setOfferingId] = useState<string | null>(() => {
+  const [chosenOfferingId, setOfferingId] = useState<string | null>(() => {
     const match = props.options.find((o) => o.serviceSlug === props.initialService && (!props.initialKind || o.kind === props.initialKind));
     return match?.offeringId ?? null;
   });
+  // A single available option for the chosen kind is selected automatically.
+  const offeringId = chosenOfferingId ?? (kindOptions.length === 1 ? kindOptions[0].offeringId : null);
   const offering = props.options.find((o) => o.offeringId === offeringId) ?? null;
   const [address, setAddress] = useState<PickedAddress | null>(null);
   const [eligibility, setEligibility] = useState<{ eligible: boolean; zoneName?: string; surchargeMinor?: number } | null>(null);
   const [date, setDate] = useState(dubaiToday());
-  const [slotsByDay, setSlotsByDay] = useState<Record<string, string[]>>({});
-  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slots, setSlots] = useState<{ key: string; days: Record<string, string[]> } | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [hold, setHold] = useState<Hold | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -88,40 +90,37 @@ export function BookingFlow(props: {
   const idemRef = useRef<string>("");
   const stepRef = useRef<HTMLDivElement>(null);
 
-  // Auto-select single option for the kind
+  const homeReady = kind !== "home_visit" || !!(eligibility?.eligible && address);
+  const slotsKey = offering && homeReady ? `${offering.offeringId}|${address?.lat ?? ""}|${address?.lng ?? ""}|${reloadTick}` : null;
+  const slotsByDay = slots && slots.key === slotsKey ? slots.days : {};
+  const slotsLoading = !!slotsKey && slots?.key !== slotsKey;
+  const loadSlots = useCallback(() => setReloadTick((n) => n + 1), []);
+
+  // Fetch availability whenever the service/address changes (state is only set in async callbacks).
   useEffect(() => {
-    if (kind && !offering && kindOptions.length === 1) setOfferingId(kindOptions[0].offeringId);
-  }, [kind, offering, kindOptions]);
-
-  const homeReady = kind !== "home_visit" || (eligibility?.eligible && address);
-
-  const loadSlots = useCallback(async () => {
-    if (!offering || !homeReady) return;
-    setSlotsLoading(true);
-    setError(null);
-    try {
-      const qs = new URLSearchParams({ offeringId: offering.offeringId, from: dubaiToday(), days: "14" });
-      if (kind === "home_visit" && address) {
-        qs.set("lat", String(address.lat));
-        qs.set("lng", String(address.lng));
-      }
-      const res = await fetch(`/api/v1/slots?${qs}`, { cache: "no-store" });
-      const body = await res.json();
-      if (!res.ok) throw new Error(body.error);
-      setSlotsByDay(body.days);
-      const first = Object.keys(body.days).sort()[0];
-      if (first && !body.days[date]) setDate(first);
-    } catch {
-      setError("We couldn't load available times. Please try again.");
-    } finally {
-      setSlotsLoading(false);
+    if (!slotsKey || !offering) return;
+    const ctrl = new AbortController();
+    const qs = new URLSearchParams({ offeringId: offering.offeringId, from: dubaiToday(), days: "14" });
+    if (kind === "home_visit" && address) {
+      qs.set("lat", String(address.lat));
+      qs.set("lng", String(address.lng));
     }
-  }, [offering, homeReady, kind, address, date]);
-
-  useEffect(() => {
-    void loadSlots();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offering?.offeringId, homeReady, address?.lat, address?.lng]);
+    fetch(`/api/v1/slots?${qs}`, { cache: "no-store", signal: ctrl.signal })
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error);
+        setSlots({ key: slotsKey, days: body.days });
+        const first = Object.keys(body.days).sort()[0];
+        setDate((d) => (body.days[d] ? d : first ?? d));
+      })
+      .catch((e) => {
+        if (ctrl.signal.aborted) return;
+        void e;
+        setSlots({ key: slotsKey, days: {} });
+        setError("We couldn't load available times. Please try again.");
+      });
+    return () => ctrl.abort();
+  }, [slotsKey, offering, kind, address]);
 
   async function checkEligibility(a: PickedAddress) {
     setAddress(a);
@@ -238,7 +237,7 @@ export function BookingFlow(props: {
   const total = (offering?.priceMinor ?? 0) + (kind === "home_visit" ? eligibility?.surchargeMinor ?? 0 : 0);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* Step 1: kind */}
       <Step n={1} title={t.stepKind} done={!!kind}>
         <div className="grid gap-3 sm:grid-cols-2">

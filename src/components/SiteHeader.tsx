@@ -22,20 +22,20 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Dictionary }) {
       <div className="container-page flex h-16 items-center justify-between gap-6 lg:h-20">
         <Link href={L("")} className="group flex flex-col leading-tight" aria-label={`${t.brand} — home`}>
           <span className="font-display text-lg font-semibold text-ink sm:text-xl">{t.brand}</span>
-          <span className="text-[11px] tracking-wide text-muted sm:text-xs">{t.brandSub}</span>
+          <span className="text-[11px] tracking-wide whitespace-nowrap text-muted sm:text-xs">{t.brandSub}</span>
         </Link>
-        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="hidden items-center gap-0.5 xl:flex">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="rounded-full px-3 py-2 text-[14px] font-medium text-ink-soft transition-colors hover:bg-sage hover:text-ink">
+            <Link key={l.href} href={l.href} className="rounded-full px-3 py-2 text-[14px] font-medium whitespace-nowrap text-ink-soft transition-colors hover:bg-sage hover:text-ink">
               {l.label}
             </Link>
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Link href={L("/portal")} className="hidden text-[14px] font-medium text-ink-soft hover:text-teal sm:inline">
+          <Link href={L("/portal")} className="hidden text-[14px] font-medium whitespace-nowrap text-ink-soft hover:text-teal sm:inline">
             {t.nav.login}
           </Link>
-          <Link href={L("/book?kind=clinic")} className="btn-primary hidden min-h-10 px-5 text-sm md:inline-flex">
+          <Link href={L("/book?kind=clinic")} className="btn-primary hidden min-h-10 px-5 text-sm whitespace-nowrap md:inline-flex">
             {t.cta.book}
           </Link>
           <MobileMenu links={[...links, { href: L("/portal"), label: t.nav.login }]} />

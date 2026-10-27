@@ -42,7 +42,7 @@ export default async function Book({ params, searchParams }: PageProps<"/[locale
   return (
     <div className="container-page py-8 sm:py-12">
       <h1 className="text-3xl text-ink sm:text-4xl">{t.booking.title}</h1>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <BookingFlow
           locale={locale}
           t={t.booking}

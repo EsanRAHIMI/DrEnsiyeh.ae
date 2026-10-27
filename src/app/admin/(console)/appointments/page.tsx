@@ -8,13 +8,20 @@ import { StatusBadge } from "@/components/portal/StatusBadge";
 import { fmtDateTime } from "@/lib/format";
 import { formatMoney } from "@/lib/money";
 
+function listRange(sp: Record<string, string | string[] | undefined>) {
+  const now = Date.now();
+  return {
+    from: typeof sp.from === "string" ? new Date(`${sp.from}T00:00:00+04:00`) : new Date(now - 86400_000),
+    to: typeof sp.to === "string" ? new Date(`${sp.to}T23:59:59+04:00`) : new Date(now + 30 * 86400_000),
+  };
+}
+
 const STATUSES = ["requested", "awaiting_confirmation", "confirmed", "completed", "cancelled", "no_show", "pending_payment", "expired"] as const;
 
 export default async function Appointments({ searchParams }: PageProps<"/admin/appointments">) {
   await requireStaff("appointments:read");
   const sp = await searchParams;
-  const from = typeof sp.from === "string" ? new Date(`${sp.from}T00:00:00+04:00`) : new Date(Date.now() - 86400_000);
-  const to = typeof sp.to === "string" ? new Date(`${sp.to}T23:59:59+04:00`) : new Date(Date.now() + 30 * 86400_000);
+  const { from, to } = listRange(sp);
   const status = typeof sp.status === "string" && (STATUSES as readonly string[]).includes(sp.status) ? [sp.status as (typeof STATUSES)[number]] : ["requested", "awaiting_confirmation", "confirmed", "completed", "no_show"] as (typeof STATUSES)[number][];
   const kind = sp.kind === "home_visit" || sp.kind === "clinic" ? sp.kind : null;
   const rows = await db()

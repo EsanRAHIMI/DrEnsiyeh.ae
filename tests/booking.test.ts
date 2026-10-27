@@ -74,8 +74,9 @@ describe("double-booking prevention", () => {
   it("database constraint blocks overlaps even if application checks are bypassed", async () => {
     const deps = makeDeps(db, NOW);
     const { booking } = await createHold(deps, { offeringId: fx.clinicOffering.id, startsAt: at("10:00"), idempotencyKey: "x" });
-    const { id: _id, reference: _r, idempotencyKey: _k, ...rest } = booking;
-    await expect(db.insert(bookings).values({ ...rest, reference: "DR-ZZZZZZ", idempotencyKey: "raw" })).rejects.toThrow();
+    const rest: Partial<typeof booking> = { ...booking };
+    delete rest.id;
+    await expect(db.insert(bookings).values({ ...(rest as typeof booking), reference: "DR-ZZZZZZ", idempotencyKey: "raw" })).rejects.toThrow();
   });
 
   it("is idempotent for the same idempotency key", async () => {

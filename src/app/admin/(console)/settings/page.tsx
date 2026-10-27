@@ -64,7 +64,10 @@ export default async function Settings() {
         {cal.length === 0 ? <p className="text-sm text-ink-soft">Not connected.</p> : (
           <ul className="space-y-2 text-sm">{cal.map((k) => <li key={k.id} className="card p-4">{k.googleAccountEmail} · {k.status} · last sync {k.lastSyncAt ? fmtDateTime(k.lastSyncAt) : "never"}{k.lastError ? <span className="block text-alert">{k.lastError}</span> : null}</li>)}</ul>
         )}
-        {can(user.roles, "settings:integrations") && <a href="/api/v1/calendar/oauth/start" className="btn-secondary mt-3 min-h-10 text-sm">{cal.length ? "Reconnect" : "Connect"} Google Calendar</a>}
+        {can(user.roles, "settings:integrations") && (
+          // eslint-disable-next-line @next/next/no-html-link-for-pages -- OAuth redirect endpoint, must be a full navigation
+          <a href="/api/v1/calendar/oauth/start" className="btn-secondary mt-3 min-h-10 text-sm">{cal.length ? "Reconnect" : "Connect"} Google Calendar</a>
+        )}
       </Section>
 
       <Section title="Notifications">

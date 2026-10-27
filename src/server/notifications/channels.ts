@@ -31,7 +31,19 @@ function redact(address: string) {
   return address.replace(/^(.{2}).*(@.*|.{2})$/, "$1***$2");
 }
 
+/** Development/E2E only: appends messages to a local file. Refused in production. */
+export const fileAdapter = (channel: string): ChannelAdapter => ({
+  async send(msg) {
+    if (process.env.DEPLOY_ENV === "production") throw new Error("file transport is disabled in production");
+    const { appendFile, mkdir } = await import("node:fs/promises");
+    await mkdir(".data", { recursive: true });
+    await appendFile(".data/outbox.jsonl", JSON.stringify({ channel, to: msg.to, subject: msg.subject, text: msg.text, at: new Date().toISOString() }) + "\n");
+    return `file-${Date.now()}`;
+  },
+});
+
 export const emailAdapter = (): ChannelAdapter => {
+  if (process.env.EMAIL_TRANSPORT === "file") return fileAdapter("email");
   const key = process.env.EMAIL_API_KEY;
   if (!key) return consoleAdapter("email");
   return {

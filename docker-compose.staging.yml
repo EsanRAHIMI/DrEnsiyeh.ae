@@ -1,0 +1,29 @@
+# Staging stack (single host). Production should use managed, UAE-region PostgreSQL with
+# encryption at rest, automated backups and point-in-time recovery — see docs/DEPLOYMENT.md.
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: drensiyeh
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "postgres"], interval: 5s, retries: 10 }
+  web:
+    build: { context: ., args: { DATABASE_URL: "postgres://postgres:${POSTGRES_PASSWORD}@db:5432/drensiyeh" } }
+    env_file: .env.staging
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/drensiyeh
+      DEPLOY_ENV: staging
+    depends_on: { db: { condition: service_healthy } }
+    ports: ["3000:3000"]
+  worker:
+    image: node:22-alpine
+    working_dir: /app
+    volumes: [./scripts:/app/scripts:ro]
+    command: ["sh", "-c", "npx -y tsx scripts/worker.mts"]
+    environment:
+      APP_BASE_URL: http://web:3000
+      CRON_SECRET: ${CRON_SECRET:?set CRON_SECRET}
+    depends_on: [web]
+volumes:
+  pgdata:
