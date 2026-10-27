@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DrEnsiyeh.ae — practice platform
 
-## Getting Started
+Website, booking, payments, patient portal, clinical records, CMS and practice administration for
+**Dr. Ensiyeh Rahimi**, Infectious Diseases Specialist, Dubai.
 
-First, run the development server:
+> Regulated features (live payments, home visits, clinical records, WhatsApp) are **disabled until
+> authorised** — see [docs/COMPLIANCE.md](docs/COMPLIANCE.md). Current state: [docs/STATUS.md](docs/STATUS.md).
+
+## Quick start (no Docker needed)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local     # fill the secrets (see comments)
+npm run db:dev                 # terminal 1: local Postgres (PGlite) on :5433
+npm run db:migrate && npm run db:seed
+npm run dev                    # http://localhost:3000
+npm run worker                 # optional: background jobs (notifications, holds, calendar…)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Seeded staff sign in at `/en/login` with `SEED_DOCTOR_EMAIL` / `SEED_ADMIN_EMAIL`. Codes are printed to the
+server console (or `.data/outbox.jsonl` with `EMAIL_TRANSPORT=file`). Staff enrol an authenticator app on first sign-in.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | |
+|---|---|
+| `npm test` | integration tests (real Postgres engine in memory) |
+| `npm run e2e` | Playwright E2E + axe accessibility (needs a running server) |
+| `npm run lint` / `npm run typecheck` | static checks |
+| `npm run db:generate` | new migration from `src/db/schema.ts` |
+| `scripts/backup.sh` / `scripts/restore.sh` | encrypted backups |
 
-## Learn More
+## Documentation
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[Architecture](docs/ARCHITECTURE.md) · [Compliance & blockers](docs/COMPLIANCE.md) ·
+[Source verification](docs/VERIFICATION.md) · [Deployment](docs/DEPLOYMENT.md) ·
+[Operations](docs/OPERATIONS.md) · [Marketing & GEO](docs/MARKETING.md) · [Status](docs/STATUS.md)
