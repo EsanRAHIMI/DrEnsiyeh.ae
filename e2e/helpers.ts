@@ -42,11 +42,10 @@ export async function dismissConsent(page: Page) {
   if (await btn.isVisible().catch(() => false)) await btn.click();
 }
 
-const TOTP_FILE = ".data/e2e-doctor-totp";
-
-/** Signs the seeded doctor in, enrolling MFA on first run and remembering the dev-only secret. */
-export async function signInDoctor(page: Page) {
-  await signIn(page, process.env.SEED_DOCTOR_EMAIL ?? "doctor@drensiyeh.test");
+/** Signs a seeded staff member in, enrolling MFA on first run and remembering the dev-only secret. */
+export async function signInStaff(page: Page, email: string, key: string) {
+  const TOTP_FILE = `.data/e2e-${key}-totp`;
+  await signIn(page, email);
   await page.waitForURL(/\/admin/);
   if (page.url().includes("/admin/mfa/setup")) {
     const secret = (await page.locator("p.font-mono").textContent())!.replace(/\s/g, "");
@@ -61,6 +60,9 @@ export async function signInDoctor(page: Page) {
   }
   await page.waitForURL(/\/admin$/);
 }
+
+export const signInDoctor = (page: Page) => signInStaff(page, process.env.SEED_DOCTOR_EMAIL ?? "doctor@drensiyeh.test", "doctor");
+export const signInAdmin = (page: Page) => signInStaff(page, process.env.SEED_ADMIN_EMAIL ?? "admin@drensiyeh.test", "admin");
 
 /** Completes Stripe-hosted Checkout in test mode with Stripe's published test card. */
 export async function payWithTestCard(page: Page) {

@@ -17,6 +17,7 @@ jobs:
       APP_BASE_URL: http://localhost:3000
       DEPLOY_ENV: ci
       EMAIL_TRANSPORT: file
+      AUTH_REQUEST_LIMIT: "200"
       SEED_DOCTOR_EMAIL: doctor@drensiyeh.test
       SEED_ADMIN_EMAIL: admin@drensiyeh.test
     services:

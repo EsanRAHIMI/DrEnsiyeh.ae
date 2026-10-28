@@ -14,6 +14,9 @@ export const STAFF_SESSION_HOURS = 12;
 const CODE_TTL_MIN = 10;
 const MAX_CODE_ATTEMPTS = 5;
 const MAX_CHALLENGES_PER_HOUR = 5;
+/** Test environments sign the same seeded staff in many times; production always uses the default. */
+const challengesPerHour = () =>
+  process.env.DEPLOY_ENV !== "production" && process.env.AUTH_REQUEST_LIMIT ? Number(process.env.AUTH_REQUEST_LIMIT) : MAX_CHALLENGES_PER_HOUR;
 
 export class AuthError extends Error {
   constructor(public code: "rate_limited" | "invalid_code" | "expired" | "disabled" | "mfa_required" | "invalid_mfa") {
@@ -31,7 +34,7 @@ export async function requestLoginCode(database: Db, rawEmail: string, baseUrl: 
     .select({ recent: sql<number>`count(*)::int` })
     .from(loginChallenges)
     .where(and(eq(loginChallenges.destination, email), gt(loginChallenges.createdAt, new Date(Date.now() - 3600_000))));
-  if (recent >= MAX_CHALLENGES_PER_HOUR) throw new AuthError("rate_limited");
+  if (recent >= challengesPerHour()) throw new AuthError("rate_limited");
 
   const code = randomNumericCode(6);
   const link = randomToken(32);

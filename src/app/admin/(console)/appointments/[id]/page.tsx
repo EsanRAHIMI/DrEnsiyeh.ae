@@ -82,7 +82,7 @@ export default async function AppointmentDetail({ params }: PageProps<"/admin/ap
                 <ActionForm action={appointmentAction} submit="Confirm appointment" okText="Confirmed">{hidden("confirm")}</ActionForm>
                 <ActionForm action={appointmentAction} submit="Decline & refund" tone="danger" confirm="Decline this appointment? Any payment is released or refunded in full." className="mt-2">
                   {hidden("decline")}
-                  <input name="reason" className="field mt-2" placeholder="Reason (internal)" />
+                  <input name="reason" className="field mt-2" placeholder="Reason (internal)" aria-label="Cancellation reason (internal)" />
                 </ActionForm>
               </div>
             )}
@@ -104,7 +104,7 @@ export default async function AppointmentDetail({ params }: PageProps<"/admin/ap
                 </ActionForm>
                 <ActionForm action={appointmentAction} submit="Cancel (full refund)" tone="danger" confirm="Cancel and fully refund this appointment?" className="mt-4">
                   {hidden("cancel")}
-                  <input name="reason" className="field mt-2" placeholder="Reason (internal)" />
+                  <input name="reason" className="field mt-2" placeholder="Reason (internal)" aria-label="Cancellation reason (internal)" />
                 </ActionForm>
               </div>
             )}
@@ -127,7 +127,7 @@ export default async function AppointmentDetail({ params }: PageProps<"/admin/ap
                     <ActionForm action={refundAction} submit="Refund" tone="secondary" confirm="Issue this refund?">
                       <input type="hidden" name="paymentId" value={p.id} />
                       <input name="amount" type="number" step="0.01" min="0.01" max={(p.amountMinor - p.amountRefundedMinor) / 100} defaultValue={(p.amountMinor - p.amountRefundedMinor) / 100} className="field w-32" aria-label="Refund amount (AED)" />
-                      <input name="reason" className="field mt-2" placeholder="Reason" />
+                      <input name="reason" className="field mt-2" placeholder="Reason" aria-label="Refund reason" />
                     </ActionForm>
                   )}
                 </td>
