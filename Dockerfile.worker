@@ -1,0 +1,6 @@
+FROM node:22-bookworm-slim
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --chown=node:node scripts/worker.mts scripts/env.mts ./scripts/
+USER node
+CMD ["node", "--experimental-strip-types", "scripts/worker.mts"]
