@@ -7,9 +7,10 @@ test.skip(!process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_"), "Stripe test k
 const email = `paid.${Date.now()}@example.test`;
 const refs: string[] = [];
 
-async function pickFirstSlotAndPay(page: import("@playwright/test").Page, name: string, fillContact: boolean) {
+async function pickFirstSlotAndPay(page: import("@playwright/test").Page, name: string, fillContact: boolean, service?: RegExp) {
   await page.getByRole("button", { name: "No — continue to booking" }).click();
   await page.getByRole("radio").first().waitFor();
+  if (service) await page.getByRole("radio", { name: service }).check();
   const slot = page.locator('button[aria-pressed="false"]').filter({ hasText: /^\d{2}:\d{2}$/ }).first();
   await slot.waitFor();
   await slot.click();
@@ -19,6 +20,7 @@ async function pickFirstSlotAndPay(page: import("@playwright/test").Page, name: 
     await page.getByLabel("Mobile number").fill("+971500004321");
   }
   await page.getByText("I have read the cancellation").click();
+  if (service === undefined) await expect(page.getByText(/Follow-up consultation|Infectious disease consultation/).first()).toBeVisible();
   await page.getByRole("button", { name: "Continue to secure payment" }).click();
   await payWithTestCard(page);
 }
@@ -27,9 +29,7 @@ test.describe.serial("Stripe test mode — Scenario A (new patient) and C (retur
   test("A: new patient pays; booking is held as paid-awaiting-confirmation until the facility confirms", async ({ page }) => {
     await page.goto("/en/book?kind=clinic");
     await dismissConsent(page);
-    await page.getByRole("button", { name: "No — continue to booking" }).waitFor();
-    await page.getByRole("radio", { name: /Infectious disease consultation/ }).check().catch(() => {});
-    await pickFirstSlotAndPay(page, "Paid Patient", true);
+    await pickFirstSlotAndPay(page, "Paid Patient", true, /Infectious disease consultation/);
     await expectStatus(page, /Payment received — awaiting confirmation/);
     refs.push((await page.locator("strong").filter({ hasText: /^DR-/ }).first().textContent())!);
   });
@@ -59,8 +59,8 @@ test.describe.serial("Stripe test mode — Scenario A (new patient) and C (retur
     await expect(page.getByText(refs[0])).toBeVisible();
     await page.goto("/en/book?kind=clinic&service=follow-up-consultation");
     await dismissConsent(page);
-    await expect(page.getByRole("radio", { name: /Follow-up consultation/ })).toBeChecked();
     await pickFirstSlotAndPay(page, "Paid Patient", true);
+
     await expectStatus(page, /Payment received — awaiting confirmation/);
     const ref = (await page.locator("strong").filter({ hasText: /^DR-/ }).first().textContent())!;
     expect(ref).not.toBe(refs[0]);

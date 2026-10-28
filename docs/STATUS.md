@@ -14,7 +14,7 @@ build (`next build && next start`) and a real Postgres engine (PGlite).
 | Design system (tokens, typography, components, RTL, reduced motion) | ✅ | ✅ axe WCAG 2.2 AA, 0 serious/critical on 13 pages × desktop & mobile | Approved photography pending usage rights |
 | Booking engine (slots, holds, expiry, buffers, travel buffers, conflict detection, idempotency, state machine, reschedule, cancel, refunds policy, no-show, staff override + audit) | ✅ | ✅ 21 integration tests incl. 8-way concurrency | DB exclusion constraint is the final arbiter |
 | Home visits (zones, eligibility, surcharge, travel buffer, map/geo picker) | ✅ | ✅ | **Disabled** until DHA home-healthcare authorisation (COMPLIANCE.md #3) |
-| Stripe Checkout (AED, cards/Apple Pay/Google Pay via dynamic methods, manual capture on confirmation, webhooks w/ signature + idempotency, refunds full/partial, reconciliation, invoices, fees) | ✅ | ✅ with fake gateway; webhook signature path not exercised against Stripe | Needs test keys to run against Stripe test mode; **live blocked** (#2, #5, #6) |
+| Stripe Checkout (AED, cards/Apple Pay/Google Pay via dynamic methods, manual capture on confirmation, webhooks w/ signature + idempotency, refunds full/partial, reconciliation, invoices, fees) | ✅ | ✅ integration (fake gateway) + **E2E against Stripe test mode** (28 Oct 2026): scenarios A and C — checkout with test card, authorise → capture on confirmation, invoice, portal history; DB state matched Stripe PaymentIntents | Webhook delivery/signature path not yet exercised (needs `stripe listen` or a hosted staging URL); Apple Pay/Google Pay not testable headless; **live blocked** (#2, #5, #6) |
 | Passwordless auth (email OTP + magic link, rate limits, lockout), sessions, staff TOTP MFA | ✅ | ✅ unit + E2E | SMS/WhatsApp OTP channel ready once providers configured |
 | Automatic account creation & safe linking | ✅ | ✅ | Clinical visibility requires in-person identity verification |
 | Patient portal (appointments, reschedule, cancel, payments, invoices, records, settings, consents, data requests, sign-out everywhere) | ✅ | ✅ E2E (booking visible, records gated) | |
@@ -59,4 +59,4 @@ production hosting.
 
 Directive scenarios B (home visit), C (returning patient follow-up with payment), E (CMS publish via
 UI) and F (ad visitor attribution) are covered at the integration level but not yet as browser E2E;
-B and the payment legs of A/C need Stripe test keys and the home-visit authorisation flag.
+The payment legs of A and C now run against Stripe test mode (`e2e/payments.spec.ts`); B needs the home-visit authorisation flag.
