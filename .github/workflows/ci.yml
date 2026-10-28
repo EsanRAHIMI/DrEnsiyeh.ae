@@ -55,7 +55,7 @@ jobs:
           npx next start -p 3000 &
           npx wait-on http://localhost:3000/en --timeout 60000
           npx playwright test
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-traces
