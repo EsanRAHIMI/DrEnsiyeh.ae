@@ -5,7 +5,7 @@ This deployment uses three services on the existing server:
 - Web, built with Dockerfile.dokploy, listening on internal port 3000.
 - Worker, built with Dockerfile.worker, calling the web service on the private network.
 
-The deployment branch is deploy/dokploy. No production data or secrets are committed.
+Dokploy builds the `main` branch. No production data or secrets are committed.
 The Docker build uses a disposable PGlite database with migrations, without demo seed data.
 The real database is migrated before the web process starts. Keep the web replica count at one
 until migration locking and shared caching are configured. An unsuccessful migration prevents startup.
